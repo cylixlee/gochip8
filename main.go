@@ -14,6 +14,9 @@ const (
 	WINDOW_WIDTH    = internal.SCREEN_WIDTH * SCALE
 	WINDOW_HEIGHT   = internal.SCREEN_HEIGHT * SCALE
 	TICKS_PER_FRAME = 10
+
+	FRAMERATE_LIMIT        = 60
+	MILLISECONDS_PER_FRAME = 1000 / FRAMERATE_LIMIT
 )
 
 func main() {
@@ -54,11 +57,11 @@ func emulatorMain() (out error) {
 	}()
 
 	window.SetTitle("CHIP8 Emulator Go")
-	renderer.RenderSetVSync(true)
 	window.Show()
 
 gameloop:
 	for {
+		start := sdl.GetTicks64()
 		event := sdl.PollEvent()
 		for event != nil {
 			switch event.GetType() {
@@ -91,6 +94,11 @@ gameloop:
 		}
 		emulator.TickTimers()
 		drawScreen(emulator, renderer)
+
+		elapsed := sdl.GetTicks64() - start
+		if MILLISECONDS_PER_FRAME > elapsed {
+			sdl.Delay(uint32(MILLISECONDS_PER_FRAME - elapsed))
+		}
 	}
 	return out
 }
